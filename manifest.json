@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Optima Progress (local)",
+  "version": "0.2.0",
+  "description": "Локальный подсчёт лекций/практик, среднего (школа) и суммы + ECTS (профиль). Все вычисления в браузере, без отправки данных.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Optima Progress (local)"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://b.optima-osvita.org/my/*", "https://b.optima-osvita.org/my/"],
+      "js": ["src/parsers.js", "src/content_my.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://b.optima-osvita.org/grade/report/user/index.php*"],
+      "js": ["src/parsers.js", "src/content_grade.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

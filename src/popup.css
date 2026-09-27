@@ -1,0 +1,15 @@
+body { font-family: system-ui, sans-serif; font-size: 13px; margin: 0; padding: 12px; width: 460px; color: #1c1c1c; }
+header h1 { font-size: 15px; margin: 0 0 4px; }
+.badge { background: #2e7d32; color: #fff; border-radius: 8px; font-size: 11px; padding: 1px 7px; vertical-align: middle; }
+.hint { color: #555; margin: 0 0 8px; }
+.totals { background: #f1f5f1; border: 1px solid #cfe0cf; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+.actions { display: flex; gap: 8px; margin-bottom: 8px; }
+button { cursor: pointer; border: 1px solid #2e7d32; background: #2e7d32; color: #fff; border-radius: 6px; padding: 5px 9px; }
+button.ghost { background: #fff; color: #2e7d32; }
+.course { border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+.course.off { opacity: 0.55; }
+.course .row { display: flex; gap: 8px; align-items: center; }
+.course .title { font-weight: 600; flex: 1; }
+.course select { max-width: 130px; }
+.meta, .avg { color: #333; margin-top: 4px; }
+footer { color: #777; font-size: 11px; margin-top: 8px; }
