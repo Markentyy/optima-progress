@@ -83,4 +83,26 @@ ok(Panel && Panel.HOST_ID === 'optima-progress-block', 'internals exposed');
   ok(Panel.panelHasFocus(doc) === false, 'blurred is free');
 }
 
+// ---------- sidebar mode: shadow lives on the inner card-body div ----------
+{
+  const dom = new JSDOM('<body></body>');
+  const doc = dom.window.document;
+  const section = doc.createElement('section');
+  section.id = Panel.HOST_ID;
+  const inner = doc.createElement('div');
+  inner.setAttribute('data-op-body', '1');
+  section.appendChild(inner);
+  doc.body.appendChild(section);
+  ok(Panel.panelShadowRoot(doc) === null, 'no shadow yet');
+  ok(Panel.panelHasFocus(doc) === false, 'no shadow means free');
+  const shadow = inner.attachShadow({ mode: 'open' });
+  ok(Panel.panelShadowRoot(doc) === shadow, 'inner shadow found');
+  const sel = doc.createElement('select');
+  shadow.appendChild(sel);
+  sel.focus();
+  ok(Panel.panelHasFocus(doc) === true, 'block-mode focused select is busy');
+  sel.blur();
+  ok(Panel.panelHasFocus(doc) === false, 'block-mode blurred is free');
+}
+
 console.log('ALL ' + n + ' ASSERTIONS PASSED');

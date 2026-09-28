@@ -8,7 +8,8 @@
 - Bulletproof panel styling (constructed stylesheet, linked resource, embedded copy).
 - Compact layout for the narrow sidebar, full course names on hover.
 - Panel never re-renders under an open control (interaction guard).
-- Event shield against page-level theme and scrollbar handlers.## [0.2.1] - 2026-09-27
+- Event shield against page-level theme and scrollbar handlers.
+- Focus detection fixed for sidebar mode (shadow on inner card-body).## [0.2.1] - 2026-09-27
 ### Fixed
 - Duplicate cards of one course no longer double the totals (merged by courseId).
 - Grade report backs up scores when `/my/` has none (no double counting).

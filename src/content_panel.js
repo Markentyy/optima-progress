@@ -35,11 +35,23 @@
     return { poke, request, release, cancel };
   }
 
+  // The shadow tree lives on the section itself (floating mode) or on the
+  // inner card-body div (sidebar mode). Both must be found.
+  function panelShadowRoot(doc) {
+    try {
+      const section = doc.getElementById(HOST_ID);
+      if (!section) return null;
+      if (section.shadowRoot) return section.shadowRoot;
+      const inner = section.querySelector('[data-op-body]');
+      return (inner && inner.shadowRoot) || null;
+    } catch (e) { return null; }
+  }
+
   // True while focus sits on an interactive control inside our panel.
   function panelHasFocus(doc) {
     try {
-      const host = doc.getElementById(HOST_ID);
-      const ae = host && host.shadowRoot && host.shadowRoot.activeElement;
+      const shadow = panelShadowRoot(doc);
+      const ae = shadow && shadow.activeElement;
       return !!(ae && /^(SELECT|INPUT|BUTTON)$/.test(ae.tagName));
     } catch (e) { return false; }
   }
@@ -241,7 +253,7 @@
     } catch (e) { /* never break the host page */ }
   }
 
-  window.OptimaPanel = { HOST_ID, createInteractionGuard, panelHasFocus, shieldHost };
+  window.OptimaPanel = { HOST_ID, createInteractionGuard, panelShadowRoot, panelHasFocus, shieldHost };
 
   boot();
 })();
