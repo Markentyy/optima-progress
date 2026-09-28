@@ -80,6 +80,19 @@ for (const l of langs) {
   ok(html.indexOf('undefined') === -1, l + ' no undefined');
   ok(node.querySelector('select.op-lang').value === l, l + ' lang selected');
   ok(node.querySelectorAll('div.op-course').length === 1, l + ' one row');
+  // compact mode for the narrow sidebar
+  const domC = new JSDOM('<body></body>');
+  const compact = V.buildStatsView(domC.window.document,
+    {
+      courses: sampleCourses(),
+      gradesByCourse: {},
+      settings: { courses: { 1005: { included: true, mode: '12' } } },
+      lang: l,
+      compact: true,
+      onLang: () => {}, onPref: () => {}, onReset: () => {},
+    });
+  ok(compact.className.indexOf('op-compact') !== -1, l + ' compact class');
+  ok(compact.querySelector('span.op-title2').title === 'Sample Course', l + ' title tooltip');
 }
 // empty state + school mean (en)
 {

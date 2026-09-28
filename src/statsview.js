@@ -1,6 +1,6 @@
 /* Shared stats view for the popup and the in-page panel.
  * buildStatsView(doc, opts) returns a DOM node. All strings come from OptimaI18n.
- * opts: { courses, gradesByCourse, lang, settings,
+ * opts: { courses, gradesByCourse, lang, settings, compact,
  *         onLang(lang), onPref(courseId, pref), onReset() } */
 (function () {
   'use strict';
@@ -58,7 +58,7 @@
     const courses = opts.courses || [];
     const prefs = opts.settings || { courses: {} };
 
-    const root = el(doc, 'div', 'op-root');
+    const root = el(doc, 'div', 'op-root' + (opts.compact ? ' op-compact' : ''));
 
     const head = el(doc, 'div', 'op-head');
     head.appendChild(el(doc, 'span', 'op-title', t('title')));
@@ -107,6 +107,7 @@
       check.checked = pref.included !== false;
       check.setAttribute('aria-label', t('ariaInclude', { title: c.title }));
       const titleEl = el(doc, 'span', 'op-title2', c.title);
+      titleEl.title = c.title;
       const sel = doc.createElement('select');
       sel.className = 'op-mode';
       sel.setAttribute('aria-label', t('ariaScale', { title: c.title }));

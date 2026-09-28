@@ -46,49 +46,73 @@
     await set({ optimaSettings: { courses: {}, lang: s.lang || 'en' } });
   }
 
+  // Embedded copy of src/stats.css. test/css-sync.test.js enforces equality,
+  // so this can never drift from the file. Last resort when neither
+  // constructed stylesheets nor linked resources are available.
+  const FULL_CSS = "/* Shared styles for the popup and the in-page panel (all classes op-*). */\n.op-root {\n  --op-bg: #f2f6f3;\n  --op-card: #ffffff;\n  --op-text: #16211a;\n  --op-muted: #5d6f63;\n  --op-accent: #1d9d57;\n  --op-accent-dark: #127245;\n  --op-accent-soft: #e4f4ea;\n  --op-border: #e2eae5;\n  --op-radius: 14px;\n  --op-shadow: 0 1px 2px rgba(20, 40, 28, 0.06), 0 4px 14px rgba(20, 40, 28, 0.06);\n  font-family: \"Segoe UI\", system-ui, -apple-system, sans-serif;\n  font-size: 13px;\n  line-height: 1.45;\n  color: var(--op-text);\n}\n\n.op-head { display: flex; gap: 8px; align-items: center; margin: 0 0 2px; }\n.op-title { font-size: 16px; font-weight: 700; letter-spacing: 0.1px; }\n\n.op-badge {\n  background: linear-gradient(135deg, var(--op-accent), var(--op-accent-dark));\n  color: #fff;\n  border-radius: 999px;\n  font-size: 10.5px;\n  font-weight: 600;\n  padding: 2px 9px;\n  letter-spacing: 0.4px;\n  text-transform: uppercase;\n}\n\n.op-lang { margin-left: auto; }\n\n.op-hint { color: var(--op-muted); margin: 0 0 10px; font-size: 12.5px; }\n\n.op-totals {\n  background: var(--op-card);\n  border: 1px solid var(--op-border);\n  border-left: 4px solid var(--op-accent);\n  border-radius: var(--op-radius);\n  box-shadow: var(--op-shadow);\n  padding: 10px 12px;\n  margin-bottom: 10px;\n}\n\n.op-actions { display: flex; gap: 8px; margin-bottom: 10px; }\n\n.op-actions button {\n  cursor: pointer;\n  border: 1px solid var(--op-accent);\n  background: linear-gradient(135deg, var(--op-accent), var(--op-accent-dark));\n  color: #fff;\n  font-weight: 600;\n  border-radius: 999px;\n  padding: 6px 14px;\n  transition: filter 0.15s ease, transform 0.1s ease;\n}\n\n.op-actions button:hover { filter: brightness(1.07); }\n.op-actions button:active { transform: scale(0.98); }\n\n.op-course {\n  background: var(--op-card);\n  border: 1px solid var(--op-border);\n  border-radius: var(--op-radius);\n  box-shadow: var(--op-shadow);\n  padding: 10px 12px;\n  margin-bottom: 8px;\n  transition: box-shadow 0.15s ease, opacity 0.15s ease;\n}\n\n.op-course:hover { box-shadow: 0 2px 4px rgba(20, 40, 28, 0.08), 0 8px 22px rgba(20, 40, 28, 0.1); }\n.op-course.off { opacity: 0.55; }\n.op-row { display: flex; gap: 8px; align-items: center; }\n.op-title2 { font-weight: 650; flex: 1; overflow-wrap: anywhere; }\n\n.op-course input[type=\"checkbox\"] {\n  width: 16px;\n  height: 16px;\n  accent-color: var(--op-accent);\n  cursor: pointer;\n  flex-shrink: 0;\n}\n\n.op-lang,\n.op-mode {\n  border: 1px solid var(--op-border);\n  border-radius: 999px;\n  padding: 4px 8px;\n  font-size: 12.5px;\n  color: var(--op-text);\n  background: var(--op-bg);\n  cursor: pointer;\n  flex-shrink: 0;\n}\n\n.op-mode { max-width: 132px; }\n\n.op-course select:focus-visible,\n.op-actions button:focus-visible,\n.op-course input[type=\"checkbox\"]:focus-visible,\n.op-lang:focus-visible {\n  outline: 2px solid var(--op-accent);\n  outline-offset: 1px;\n}\n\n.op-meta { color: var(--op-muted); font-size: 12.5px; margin-top: 6px; }\n\n.op-avg {\n  display: inline-block;\n  margin-top: 6px;\n  background: var(--op-accent-soft);\n  color: var(--op-accent-dark);\n  font-weight: 650;\n  border-radius: 999px;\n  padding: 3px 11px;\n}\n\n.op-foot { color: var(--op-muted); font-size: 11px; margin-top: 10px; text-align: center; }\n\n/* Compact mode for the narrow dashboard sidebar. */\n.op-compact { font-size: 12.5px; }\n.op-compact .op-head { flex-wrap: wrap; row-gap: 6px; }\n.op-compact .op-title { font-size: 14px; }\n.op-compact .op-totals,\n.op-compact .op-course { padding: 8px 10px; }\n.op-compact .op-row { flex-wrap: wrap; }\n.op-compact .op-title2 { flex: 1 1 100%; font-size: 12.5px; }\n.op-compact .op-mode { width: 100%; max-width: none; }\n.op-compact .op-meta { font-size: 12px; }\n.op-compact .op-avg { font-size: 12px; }\n";
+
   async function applyCss(shadow) {
+    // Tier 1: constructed stylesheet from the live file (fast, CSP-safe).
     try {
       const res = await fetch(chrome.runtime.getURL('src/stats.css'));
       if (!res.ok) throw new Error('css http ' + res.status);
-      const text = await res.text();
       const sheet = new CSSStyleSheet();
-      sheet.replaceSync(text);
+      sheet.replaceSync(await res.text());
       shadow.adoptedStyleSheets = [sheet];
-    } catch (e) {
-      const st = document.createElement('style');
-      st.textContent = '.op-root{font:13px system-ui,sans-serif;color:#16211a}'
-        + '.op-course{border:1px solid #ddd;border-radius:8px;padding:8px;margin-bottom:8px}';
-      shadow.appendChild(st);
-    }
+      return;
+    } catch (e) { /* fall through */ }
+    // Tier 2: linked extension resource (covered by web_accessible_resources).
+    try {
+      await new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = chrome.runtime.getURL('src/stats.css');
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error('link css failed'));
+        shadow.appendChild(link);
+        setTimeout(() => reject(new Error('link css timeout')), 3000);
+      });
+      return;
+    } catch (e) { /* fall through */ }
+    // Tier 3: embedded copy, always available.
+    const st = document.createElement('style');
+    st.textContent = FULL_CSS;
+    shadow.appendChild(st);
   }
 
-  function ensureHost() {
-    let host = document.getElementById(HOST_ID);
-    if (host) return host;
-    host = document.createElement('section');
-    host.id = HOST_ID;
+  // Returns the element to attach the shadow tree to. In sidebar mode it is
+  // an inner card-body div so Moodle's own card padding applies.
+  function ensureMountParent() {
+    const old = document.getElementById(HOST_ID);
+    if (old) return old.querySelector('[data-op-body]') || old;
+    const section = document.createElement('section');
+    section.id = HOST_ID;
     const pre = document.querySelector('#block-region-side-pre');
     const post = document.querySelector('#block-region-side-post');
     const sidebar = pre || post;
     if (sidebar) {
-      host.className = 'block card mb-3';
-      host.setAttribute('role', 'complementary');
-      sidebar.appendChild(host);
-    } else {
-      host.style.position = 'fixed';
-      host.style.right = '12px';
-      host.style.bottom = '12px';
-      host.style.width = '420px';
-      host.style.maxHeight = '70vh';
-      host.style.overflowY = 'auto';
-      host.style.zIndex = '1000';
-      host.style.background = '#fff';
-      host.style.border = '1px solid #ddd';
-      host.style.borderRadius = '12px';
-      host.style.padding = '10px';
-      document.body.appendChild(host);
+      section.className = 'block card mb-3';
+      section.setAttribute('role', 'complementary');
+      const body = document.createElement('div');
+      body.className = 'card-body p-3';
+      body.setAttribute('data-op-body', '1');
+      section.appendChild(body);
+      sidebar.appendChild(section);
+      return body;
     }
-    return host;
+    section.style.position = 'fixed';
+    section.style.right = '12px';
+    section.style.bottom = '12px';
+    section.style.width = '420px';
+    section.style.maxHeight = '70vh';
+    section.style.overflowY = 'auto';
+    section.style.zIndex = '1000';
+    section.style.background = '#fff';
+    section.style.border = '1px solid #ddd';
+    section.style.borderRadius = '12px';
+    section.style.padding = '10px';
+    document.body.appendChild(section);
+    return section;
   }
 
   async function render(shadow, mount) {
@@ -116,6 +140,7 @@
         gradesByCourse,
         settings,
         lang,
+        compact: true,
         onLang: async (l) => { await saveLang(l); },
         onPref: async (courseId, pref) => { await savePref(courseId, pref); },
         onReset: async () => { await resetPrefs(); },
@@ -126,7 +151,8 @@
   async function boot() {
     try {
       if (!window.OptimaParsers || !window.OptimaI18n || !window.OptimaStatsView) return;
-      const host = ensureHost();
+      const parent = ensureMountParent();
+      const host = parent;
       if (!host.shadowRoot) host.attachShadow({ mode: 'open' });
       const shadow = host.shadowRoot;
       await applyCss(shadow);

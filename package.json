@@ -4,7 +4,7 @@
   "private": true,
   "description": "Local-only browser extension: lecture/practice counters and grades for a Moodle-based platform.",
   "scripts": {
-    "test": "node test/parsers.test.js && node test/i18n.test.js"
+    "test": "node test/parsers.test.js && node test/i18n.test.js && node test/css-sync.test.js"
   },
   "devDependencies": {
     "jsdom": "^30.1.1"

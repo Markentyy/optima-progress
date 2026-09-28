@@ -118,3 +118,15 @@
 }
 
 .op-foot { color: var(--op-muted); font-size: 11px; margin-top: 10px; text-align: center; }
+
+/* Compact mode for the narrow dashboard sidebar. */
+.op-compact { font-size: 12.5px; }
+.op-compact .op-head { flex-wrap: wrap; row-gap: 6px; }
+.op-compact .op-title { font-size: 14px; }
+.op-compact .op-totals,
+.op-compact .op-course { padding: 8px 10px; }
+.op-compact .op-row { flex-wrap: wrap; }
+.op-compact .op-title2 { flex: 1 1 100%; font-size: 12.5px; }
+.op-compact .op-mode { width: 100%; max-width: none; }
+.op-compact .op-meta { font-size: 12px; }
+.op-compact .op-avg { font-size: 12px; }
