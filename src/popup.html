@@ -3,20 +3,14 @@
 <head>
 <meta charset="utf-8">
 <title>Optima Progress (local)</title>
+<link rel="stylesheet" href="stats.css">
 <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-<header>
-  <h1>Optima Progress <span class="badge">local</span></h1>
-  <p class="hint">Tick courses to include them. School - mean, college - total + ECTS.</p>
-</header>
-<section id="totals" class="totals">No data yet. Open the <b>/my/</b> page to collect progress.</section>
-<section class="actions">
-  <button id="reset" type="button" class="ghost">Reset settings</button>
-</section>
-<main id="list"></main>
-<footer>Everything is computed locally in your browser. The extension sends nothing anywhere.</footer>
+<main id="app"></main>
 <script src="parsers.js"></script>
+<script src="i18n.js"></script>
+<script src="statsview.js"></script>
 <script src="storage.js"></script>
 <script src="popup.js"></script>
 </body>

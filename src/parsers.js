@@ -148,15 +148,15 @@
   }
 
   // National 5-point grade + ECTS table:
-  // A 90-100 → 5 (Excellent); B 82-89, C 74-81 → 4 (Good);
-  // D 64-73, E 60-63 → 3 (Satisfactory); FX 35-59, F 0-34 → 2 (Fail).
+  // A 90-100 → 5; B 82-89, C 74-81 → 4; D 64-73, E 60-63 → 3; FX 35-59, F 0-34 → 2.
+  // Display labels live in OptimaI18n (g5_*), not here.
   function nationalFor100(total100) {
     const letter = ectsLetter(total100);
     if (!letter) return null;
-    if (letter === 'A') return { ects: 'A', grade5: 5, label: 'Excellent' };
-    if (letter === 'B' || letter === 'C') return { ects: letter, grade5: 4, label: 'Good' };
-    if (letter === 'D' || letter === 'E') return { ects: letter, grade5: 3, label: 'Satisfactory' };
-    return { ects: letter, grade5: 2, label: 'Fail' };
+    if (letter === 'A') return { ects: 'A', grade5: 5 };
+    if (letter === 'B' || letter === 'C') return { ects: letter, grade5: 4 };
+    if (letter === 'D' || letter === 'E') return { ects: letter, grade5: 3 };
+    return { ects: letter, grade5: 2 };
   }
 
   window.OptimaParsers = {

@@ -40,7 +40,7 @@ ok(P.courseIdFromUrl('https://b.optima-osvita.org/course/view.php?id=987') === '
 
 const bounds = [[90,'A'],[89,'B'],[82,'B'],[81,'C'],[74,'C'],[73,'D'],[64,'D'],[63,'E'],[60,'E'],[59,'FX'],[35,'FX'],[34,'F'],[0,'F'],[120,'A']];
 for (const [v, l] of bounds) ok(P.ectsLetter(v) === l, 'ects ' + v + '=' + l);
-ok(P.nationalFor100(100).grade5 === 5 && P.nationalFor100(100).label === 'Excellent', 'nat A');
+ok(P.nationalFor100(100).grade5 === 5 && P.nationalFor100(100).ects === 'A', 'nat A');
 ok(P.nationalFor100(85).grade5 === 4, 'nat B');
 ok(P.nationalFor100(70).grade5 === 3, 'nat D');
 ok(P.nationalFor100(25).grade5 === 2, 'nat F');

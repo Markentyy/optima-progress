@@ -1,0 +1,120 @@
+/* Shared styles for the popup and the in-page panel (all classes op-*). */
+.op-root {
+  --op-bg: #f2f6f3;
+  --op-card: #ffffff;
+  --op-text: #16211a;
+  --op-muted: #5d6f63;
+  --op-accent: #1d9d57;
+  --op-accent-dark: #127245;
+  --op-accent-soft: #e4f4ea;
+  --op-border: #e2eae5;
+  --op-radius: 14px;
+  --op-shadow: 0 1px 2px rgba(20, 40, 28, 0.06), 0 4px 14px rgba(20, 40, 28, 0.06);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--op-text);
+}
+
+.op-head { display: flex; gap: 8px; align-items: center; margin: 0 0 2px; }
+.op-title { font-size: 16px; font-weight: 700; letter-spacing: 0.1px; }
+
+.op-badge {
+  background: linear-gradient(135deg, var(--op-accent), var(--op-accent-dark));
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.op-lang { margin-left: auto; }
+
+.op-hint { color: var(--op-muted); margin: 0 0 10px; font-size: 12.5px; }
+
+.op-totals {
+  background: var(--op-card);
+  border: 1px solid var(--op-border);
+  border-left: 4px solid var(--op-accent);
+  border-radius: var(--op-radius);
+  box-shadow: var(--op-shadow);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.op-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+
+.op-actions button {
+  cursor: pointer;
+  border: 1px solid var(--op-accent);
+  background: linear-gradient(135deg, var(--op-accent), var(--op-accent-dark));
+  color: #fff;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.op-actions button:hover { filter: brightness(1.07); }
+.op-actions button:active { transform: scale(0.98); }
+
+.op-course {
+  background: var(--op-card);
+  border: 1px solid var(--op-border);
+  border-radius: var(--op-radius);
+  box-shadow: var(--op-shadow);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.op-course:hover { box-shadow: 0 2px 4px rgba(20, 40, 28, 0.08), 0 8px 22px rgba(20, 40, 28, 0.1); }
+.op-course.off { opacity: 0.55; }
+.op-row { display: flex; gap: 8px; align-items: center; }
+.op-title2 { font-weight: 650; flex: 1; overflow-wrap: anywhere; }
+
+.op-course input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--op-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.op-lang,
+.op-mode {
+  border: 1px solid var(--op-border);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12.5px;
+  color: var(--op-text);
+  background: var(--op-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.op-mode { max-width: 132px; }
+
+.op-course select:focus-visible,
+.op-actions button:focus-visible,
+.op-course input[type="checkbox"]:focus-visible,
+.op-lang:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 1px;
+}
+
+.op-meta { color: var(--op-muted); font-size: 12.5px; margin-top: 6px; }
+
+.op-avg {
+  display: inline-block;
+  margin-top: 6px;
+  background: var(--op-accent-soft);
+  color: var(--op-accent-dark);
+  font-weight: 650;
+  border-radius: 999px;
+  padding: 3px 11px;
+}
+
+.op-foot { color: var(--op-muted); font-size: 11px; margin-top: 10px; text-align: center; }
