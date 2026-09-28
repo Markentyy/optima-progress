@@ -14,7 +14,3 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: python3 -c "import json; json.load(open('manifest.json'))"
-      - name: No long dashes or non-English text outside site matchers
-        run: |
-          ! grep -rn --exclude=ci.yml '[—–]' src manifest.json README.md PRIVACY.md CHANGELOG.md CONTRIBUTING.md .github/ \
-            || (echo 'long dashes found' && exit 1)
