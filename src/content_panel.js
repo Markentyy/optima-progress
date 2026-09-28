@@ -9,6 +9,49 @@
   const HOST_ID = 'optima-progress-block';
   const CARD_SELECTOR = '.block_optima_indicators__course-card';
 
+  // Interaction guard: never replace panel DOM while the user operates a
+  // control (e.g. an open <select>). Renders arriving meanwhile are deferred.
+  function createInteractionGuard(onReady, opts) {
+    const waitMs = (opts && opts.waitMs) || 2000;
+    const isBusy = (opts && opts.isBusy) || (() => false);
+    let interactUntil = 0;
+    let timer = null;
+    let retries = 0;
+    function poke(ms) { interactUntil = Date.now() + (ms || waitMs); }
+    function cancel() { if (timer) { clearTimeout(timer); timer = null; } retries = 0; }
+    function release() { interactUntil = 0; cancel(); }
+    function request() {
+      if (Date.now() < interactUntil || isBusy()) {
+        if (!timer && retries < 12) {
+          retries += 1;
+          timer = setTimeout(() => { timer = null; request(); }, 1200);
+        }
+        return false;
+      }
+      cancel();
+      onReady();
+      return true;
+    }
+    return { poke, request, release, cancel };
+  }
+
+  // True while focus sits on an interactive control inside our panel.
+  function panelHasFocus(doc) {
+    try {
+      const host = doc.getElementById(HOST_ID);
+      const ae = host && host.shadowRoot && host.shadowRoot.activeElement;
+      return !!(ae && /^(SELECT|INPUT|BUTTON)$/.test(ae.tagName));
+    } catch (e) { return false; }
+  }
+
+  // Shield against page-level delegated handlers (theme JS, custom scrollbars):
+  // our own direct listeners still fire, the page never sees the events.
+  function shieldHost(host) {
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach((type) => {
+      host.addEventListener(type, (e) => e.stopPropagation(), false);
+    });
+  }
+
   function validCourse(c) {
     return c && typeof c.courseId === 'string' && c.practices && c.lectures;
   }
@@ -141,9 +184,9 @@
         settings,
         lang,
         compact: true,
-        onLang: async (l) => { await saveLang(l); },
-        onPref: async (courseId, pref) => { await savePref(courseId, pref); },
-        onReset: async () => { await resetPrefs(); },
+        onLang: async (l) => { await saveLang(l); if (mount._opRefresh) mount._opRefresh(); },
+        onPref: async (courseId, pref) => { await savePref(courseId, pref); if (mount._opRefresh) mount._opRefresh(); },
+        onReset: async () => { await resetPrefs(); if (mount._opRefresh) mount._opRefresh(); },
       }));
     } catch (e) { /* never break the host page */ }
   }
@@ -164,16 +207,28 @@
       }
 
       const draw = () => render(shadow, mount);
+      const guard = createInteractionGuard(draw, { isBusy: () => panelHasFocus(document) });
+      const requestDraw = () => guard.request();
+      // Own changes redraw at once (the user already picked an option);
+      // foreign writes wait for a quiet moment.
+      mount._opRefresh = () => { guard.release(); draw(); };
       chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'local' && (changes.optimaMy || changes.optimaGrades || changes.optimaSettings)) draw();
+        if (area === 'local' && (changes.optimaMy || changes.optimaGrades || changes.optimaSettings)) requestDraw();
       });
+      // Any interaction restarts the quiet window; shield page-level handlers.
+      const section = document.getElementById(HOST_ID);
+      if (section) {
+        section.addEventListener('pointerdown', () => guard.poke(), false);
+        section.addEventListener('focusin', () => guard.poke(), false);
+        shieldHost(section);
+      }
 
       if (document.querySelector(CARD_SELECTOR)) {
         draw();
       } else {
         // Indicators may load late: one-shot observer with a timeout.
         let done = false;
-        const stop = () => { if (!done) { done = true; try { obs.disconnect(); } catch (e) {} draw(); } };
+        const stop = () => { if (!done) { done = true; try { obs.disconnect(); } catch (e) {} requestDraw(); } };
         const obs = new MutationObserver(() => {
           if (document.querySelector(CARD_SELECTOR)) stop();
         });
@@ -185,6 +240,8 @@
       }
     } catch (e) { /* never break the host page */ }
   }
+
+  window.OptimaPanel = { HOST_ID, createInteractionGuard, panelHasFocus, shieldHost };
 
   boot();
 })();
