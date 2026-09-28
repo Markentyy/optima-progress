@@ -16,5 +16,5 @@ jobs:
       - run: python3 -c "import json; json.load(open('manifest.json'))"
       - name: No long dashes or non-English text outside site matchers
         run: |
-          ! grep -rn '[—–]' src manifest.json README.md PRIVACY.md CHANGELOG.md CONTRIBUTING.md .github/ \
+          ! grep -rn --exclude=ci.yml '[—–]' src manifest.json README.md PRIVACY.md CHANGELOG.md CONTRIBUTING.md .github/ \
             || (echo 'long dashes found' && exit 1)
