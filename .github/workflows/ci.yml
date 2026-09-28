@@ -1,0 +1,20 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: python3 -c "import json; json.load(open('manifest.json'))"
+      - name: No long dashes or non-English text outside site matchers
+        run: |
+          ! grep -rn '[—–]' src manifest.json README.md PRIVACY.md CHANGELOG.md CONTRIBUTING.md .github/ \
+            || (echo 'long dashes found' && exit 1)
