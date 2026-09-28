@@ -22,9 +22,11 @@
     }
   }
 
+  // NOTE: the patterns below match the site's Ukrainian UI ("Лекція", "Оцінка:"...).
+  // They are data matchers, not repo language: do not translate them.
   function classifyActivity(name) {
     const n = String(name || '').trim();
-    if (/^лекц/i.test(n)) return 'lecture';
+    if (/^лекц/i.test(n)) return 'lecture'; // "Лекція..."
     if (/практичн|лабораторн|^тест|завдання|практикум|зал[іi]к|проєкт|проект|есе/i.test(n)) return 'practice';
     return 'other';
   }
@@ -37,8 +39,11 @@
     return 'unknown';
   }
 
+  // Cards of one course are merged by courseId, otherwise totals would double.
+  // Scores are stored once per course (not per section) to save memory.
   function parseMyPage(doc) {
-    const courses = [];
+    const byId = {};
+    const order = [];
     const cards = doc.querySelectorAll('.block_optima_indicators__course-card');
     cards.forEach((card) => {
       const headLink = card.querySelector('.block_optima_indicators__course-header a[href*="course/view.php"]');
@@ -46,13 +51,22 @@
       const courseId = courseIdFromUrl(headLink.getAttribute('href'));
       const title = (headLink.textContent || '').trim();
       if (!courseId || !title) return;
+      if (!byId[courseId]) {
+        byId[courseId] = {
+          courseId, title,
+          sections: [],
+          lectures: { done: 0, total: 0 },
+          practices: { graded: 0, submitted: 0, todo: 0, total: 0, scores: [] },
+        };
+        order.push(courseId);
+      }
+      const course = byId[courseId];
 
-      const sections = [];
       card.querySelectorAll('.block_optima_indicators__scale').forEach((scale) => {
         const labelEl = scale.querySelector('.block_optima_indicators__section');
         const label = labelEl ? labelEl.textContent.trim() : '';
         const lectures = { done: 0, total: 0 };
-        const practices = { graded: 0, submitted: 0, todo: 0, total: 0, scores: [] };
+        const practices = { graded: 0, submitted: 0, todo: 0, total: 0 };
 
         scale.querySelectorAll('a[data-region="optima-indicators-cell"]').forEach((cell) => {
           const name = cell.getAttribute('data-name') || '';
@@ -68,36 +82,31 @@
 
           if (kind === 'lecture') {
             lectures.total += 1;
-            if (status === 'completed') lectures.done += 1;
+            course.lectures.total += 1;
+            if (status === 'completed') {
+              lectures.done += 1;
+              course.lectures.done += 1;
+            }
           } else if (kind === 'practice') {
             practices.total += 1;
+            course.practices.total += 1;
             if (score !== null) {
               practices.graded += 1;
-              practices.scores.push({ name, score, url });
+              course.practices.graded += 1;
+              course.practices.scores.push({ name, score, url });
             } else if (status === 'submitted') {
               practices.submitted += 1;
+              course.practices.submitted += 1;
             } else {
               practices.todo += 1;
+              course.practices.todo += 1;
             }
           }
         });
-        sections.push({ label, lectures, practices });
+        course.sections.push({ label, lectures, practices });
       });
-
-      const totalLectures = sections.reduce((a, s) => ({ done: a.done + s.lectures.done, total: a.total + s.lectures.total }), { done: 0, total: 0 });
-      const totalPractices = sections.reduce(
-        (a, s) => ({
-          graded: a.graded + s.practices.graded,
-          submitted: a.submitted + s.practices.submitted,
-          todo: a.todo + s.practices.todo,
-          total: a.total + s.practices.total,
-          scores: a.scores.concat(s.practices.scores),
-        }),
-        { graded: 0, submitted: 0, todo: 0, total: 0, scores: [] }
-      );
-      courses.push({ courseId, title, sections, lectures: totalLectures, practices: totalPractices });
     });
-    return courses;
+    return order.map((id) => byId[id]);
   }
 
   function parseGradeReport(doc) {
@@ -138,16 +147,16 @@
     return 'F';
   }
 
-  // Национальная 5-балльная + ECTS по таблице:
-  // A 90-100 → 5 (відмінно); B 82-89, C 74-81 → 4 (добре);
-  // D 64-73, E 60-63 → 3 (задовільно); FX 35-59, F 0-34 → 2 (незадовільно).
+  // National 5-point grade + ECTS table:
+  // A 90-100 → 5 (Excellent); B 82-89, C 74-81 → 4 (Good);
+  // D 64-73, E 60-63 → 3 (Satisfactory); FX 35-59, F 0-34 → 2 (Fail).
   function nationalFor100(total100) {
     const letter = ectsLetter(total100);
     if (!letter) return null;
-    if (letter === 'A') return { ects: 'A', grade5: 5, label: 'відмінно' };
-    if (letter === 'B' || letter === 'C') return { ects: letter, grade5: 4, label: 'добре' };
-    if (letter === 'D' || letter === 'E') return { ects: letter, grade5: 3, label: 'задовільно' };
-    return { ects: letter, grade5: 2, label: 'незадовільно' };
+    if (letter === 'A') return { ects: 'A', grade5: 5, label: 'Excellent' };
+    if (letter === 'B' || letter === 'C') return { ects: letter, grade5: 4, label: 'Good' };
+    if (letter === 'D' || letter === 'E') return { ects: letter, grade5: 3, label: 'Satisfactory' };
+    return { ects: letter, grade5: 2, label: 'Fail' };
   }
 
   window.OptimaParsers = {
