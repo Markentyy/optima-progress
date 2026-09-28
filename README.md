@@ -1,6 +1,6 @@
 # Optima Progress (local)
 
-![version](https://img.shields.io/badge/version-0.2.1-blue)
+![version](https://img.shields.io/badge/version-0.3.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![privacy](https://img.shields.io/badge/data-local%20only-brightgreen)
 ![platform](https://img.shields.io/badge/platform-Chrome%20MV3-orange)
@@ -17,6 +17,7 @@ A local-only browser extension (Chrome MV3, Firefox next) for a Moodle-based lea
   - College (100-point): running total of earned points plus the 5-point and ECTS equivalent
     (A 90-100 → 5; B 82-89, C 74-81 → 4; D 64-73, E 60-63 → 3; FX 35-59, F 0-34 → 2).
 - Checkboxes per course plus summed totals across selected courses. No cross-course average.
+- Interface in English, Ukrainian and Russian with an in-UI switcher, in both the popup and the on-page sidebar panel.
 
 ## Install
 

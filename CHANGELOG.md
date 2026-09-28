@@ -1,6 +1,10 @@
 # Changelog
 
-## [0.2.1] - 2026-09-27
+## [0.3.0] - 2026-09-28
+### Added
+- In-page sidebar panel with the same full stats as the popup.
+- Interface in English, Ukrainian and Russian with an in-UI switcher.
+- Shared stats view for popup and panel, dictionary parity tests.## [0.2.1] - 2026-09-27
 ### Fixed
 - Duplicate cards of one course no longer double the totals (merged by courseId).
 - Grade report backs up scores when `/my/` has none (no double counting).
