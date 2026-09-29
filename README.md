@@ -16,7 +16,7 @@ A local-only browser extension (Chrome MV3, Firefox next) for a Moodle-based lea
   - School (12-point): arithmetic mean, `sum / n`;
   - College (100-point): running total of earned points plus the 5-point and ECTS equivalent
     (A 90-100 → 5; B 82-89, C 74-81 → 4; D 64-73, E 60-63 → 3; FX 35-59, F 0-34 → 2).
-- Checkboxes per course plus summed totals across selected courses. No cross-course average.
+- Checkboxes per course plus summed totals across selected courses.
 - Interface in English, Ukrainian and Russian with an in-UI switcher, in both the popup and the on-page sidebar panel.
 
 ## Install
@@ -29,15 +29,6 @@ A local-only browser extension (Chrome MV3, Firefox next) for a Moodle-based lea
 ## Privacy
 
 See `PRIVACY.md`. In short: no network requests at all, only pages you already opened are read. No names, emails, user ids or session keys in code or storage.
-
-## Beta: how to report a bug
-
-Copy into the chat and fill in:
-- Chrome version:
-- Course:
-- Expected:
-- Shown:
-- Screenshots of the popup and the `/my/` page (feel free to blur personal details).
 
 ## Development
 
