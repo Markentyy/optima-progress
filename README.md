@@ -4,7 +4,7 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![privacy](https://img.shields.io/badge/data-local%20only-brightgreen)
 ![platform](https://img.shields.io/badge/platform-Chrome%20MV3-orange)
-![ci](https://github.com/mvockob/optima-progress/actions/workflows/ci.yml/badge.svg)
+![ci](https://github.com/Markentyy/optima-progress/actions/workflows/ci.yml/badge.svg)
 
 A local-only browser extension (Chrome MV3, Firefox next) for a Moodle-based learning platform. It counts completed lectures and practical assignments per course and shows grades.
 
