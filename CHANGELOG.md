@@ -1,6 +1,8 @@
 # Changelog
 
-## [0.3.0] - 2026-09-28
+## [Unreleased]
+### Added
+- Semester/year statistics switcher, current semester auto-detected by class dates.## [0.3.0] - 2026-09-28
 ### Added
 - In-page sidebar panel with the same full stats as the popup.
 - Interface in English, Ukrainian and Russian with an in-UI switcher.

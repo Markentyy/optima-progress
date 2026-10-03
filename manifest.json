@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Optima Progress (local)",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Local-only counters for lectures and practices, school mean and college total with ECTS. Everything is computed in the browser, nothing is sent anywhere.",
   "permissions": ["storage"],
   "web_accessible_resources": [

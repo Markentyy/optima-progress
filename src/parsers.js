@@ -39,6 +39,58 @@
     return 'unknown';
   }
 
+  // Semester number from a section label ("Заняття, 5 семестр" -> 5).
+  function semesterFromLabel(label) {
+    const m = String(label || '').match(/(\d+)\s*семестр/i);
+    return m ? Number(m[1]) : null;
+  }
+
+  // Expected date from a cell ("очікуваний: 7 вересня 2026" -> UTC ms).
+  // Month names are Ukrainian (genitive preferred, nominative accepted).
+  const UA_MONTHS = {
+    'січня': 0, 'січень': 0, 'лютого': 1, 'лютий': 1, 'березня': 2, 'березень': 2,
+    'квітня': 3, 'квітень': 3, 'травня': 4, 'травень': 4, 'червня': 5, 'червень': 5,
+    'липня': 6, 'липень': 6, 'серпня': 7, 'серпень': 7, 'вересня': 8, 'вересень': 8,
+    'жовтня': 9, 'жовтень': 9, 'листопада': 10, 'листопад': 10, 'грудня': 11, 'грудень': 11,
+  };
+
+  function parseExpectedDate(raw) {
+    const m = String(raw || '').match(/(\d{1,2})\s+([а-яіїєґ]+)\s+(\d{4})/i);
+    if (!m) return null;
+    const mo = UA_MONTHS[m[2].toLowerCase()];
+    if (mo === undefined) return null;
+    const day = Number(m[1]);
+    if (day < 1 || day > 31) return null;
+    return Date.UTC(Number(m[3]), mo, day);
+  }
+
+  // Current semester across courses: the one whose date range holds `nowMs`,
+  // else the nearest one. Null when no dates exist at all.
+  function detectCurrentSemester(courses, nowMs) {
+    const now = nowMs !== undefined ? nowMs : Date.now();
+    const ranges = {};
+    (courses || []).forEach((c) => {
+      ((c && c.sections) || []).forEach((s) => {
+        if (!s || !s.semester || s.minTs === null || s.minTs === undefined) return;
+        const r = ranges[s.semester] || (ranges[s.semester] = { min: s.minTs, max: s.maxTs });
+        if (s.minTs < r.min) r.min = s.minTs;
+        if (s.maxTs > r.max) r.max = s.maxTs;
+      });
+    });
+    const sems = Object.keys(ranges).map(Number);
+    if (!sems.length) return null;
+    for (const n of sems) {
+      if (now >= ranges[n].min && now <= ranges[n].max) return n;
+    }
+    let best = sems[0];
+    let bestDist = Math.min(Math.abs(now - ranges[best].min), Math.abs(now - ranges[best].max));
+    for (const n of sems) {
+      const d = Math.min(Math.abs(now - ranges[n].min), Math.abs(now - ranges[n].max));
+      if (d < bestDist) { bestDist = d; best = n; }
+    }
+    return best;
+  }
+
   // Cards of one course are merged by courseId, otherwise totals would double.
   // Scores are stored once per course (not per section) to save memory.
   function parseMyPage(doc) {
@@ -65,14 +117,20 @@
       card.querySelectorAll('.block_optima_indicators__scale').forEach((scale) => {
         const labelEl = scale.querySelector('.block_optima_indicators__section');
         const label = labelEl ? labelEl.textContent.trim() : '';
+        const semester = semesterFromLabel(label);
         const lectures = { done: 0, total: 0 };
         const practices = { graded: 0, submitted: 0, todo: 0, total: 0 };
+        let minTs = null;
+        let maxTs = null;
 
         scale.querySelectorAll('a[data-region="optima-indicators-cell"]').forEach((cell) => {
           const name = cell.getAttribute('data-name') || '';
           const kind = classifyActivity(name);
           const status = cellStatus(cell.className);
           const url = cell.getAttribute('href') || '';
+          const ts = parseExpectedDate(cell.getAttribute('data-date'));
+          if (ts !== null && (minTs === null || ts < minTs)) minTs = ts;
+          if (ts !== null && (maxTs === null || ts > maxTs)) maxTs = ts;
           const valueEl = cell.querySelector('.block_optima_indicators__value');
           let score = valueEl ? toNumber(valueEl.textContent) : null;
           if (score === null) {
@@ -93,7 +151,7 @@
             if (score !== null) {
               practices.graded += 1;
               course.practices.graded += 1;
-              course.practices.scores.push({ name, score, url });
+              course.practices.scores.push({ name, score, url, semester });
             } else if (status === 'submitted') {
               practices.submitted += 1;
               course.practices.submitted += 1;
@@ -103,7 +161,7 @@
             }
           }
         });
-        course.sections.push({ label, lectures, practices });
+        course.sections.push({ label, semester, minTs, maxTs, lectures, practices });
       });
     });
     return order.map((id) => byId[id]);
@@ -164,6 +222,9 @@
     courseIdFromUrl,
     classifyActivity,
     cellStatus,
+    semesterFromLabel,
+    parseExpectedDate,
+    detectCurrentSemester,
     parseMyPage,
     parseGradeReport,
     mean,

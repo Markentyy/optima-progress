@@ -34,6 +34,25 @@
 
 .op-hint { color: var(--op-muted); margin: 0 0 10px; font-size: 12.5px; }
 
+.op-scope { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+.op-scope-btn {
+  cursor: pointer;
+  border: 1px solid var(--op-border);
+  background: var(--op-card);
+  color: var(--op-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.op-scope-btn.on {
+  border-color: var(--op-accent);
+  background: linear-gradient(135deg, var(--op-accent), var(--op-accent-dark));
+  color: #fff;
+}
+
 .op-totals {
   background: var(--op-card);
   border: 1px solid var(--op-border);

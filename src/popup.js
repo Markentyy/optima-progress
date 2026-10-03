@@ -16,22 +16,34 @@
     };
   }
 
+  async function saveSettings(patch) {
+    const data = await new Promise((r) => chrome.storage.local.get('optimaSettings', r));
+    const s = (data && data.optimaSettings) || { courses: {} };
+    Object.assign(s, patch);
+    await new Promise((r) => chrome.storage.local.set({ optimaSettings: s }, r));
+  }
+
   async function render() {
     const I = window.OptimaI18n;
+    const V = window.OptimaStatsView;
     const { courses, gradesByCourse, settings } = await load();
     const lang = I.normalizeLang((settings && settings.lang) || I.detectLang(document));
+    const scope = V.resolveScope(window.OptimaParsers, settings, courses, Date.now());
     const app = document.getElementById('app');
     app.innerHTML = '';
-    app.appendChild(window.OptimaStatsView.buildStatsView(document, {
+    app.appendChild(V.buildStatsView(document, {
       courses,
       gradesByCourse,
       settings,
       lang,
+      scope,
+      semesters: V.allSemesters(courses),
+      onScope: async (sc) => {
+        await saveSettings({ scope: sc });
+        render();
+      },
       onLang: async (l) => {
-        const data = await new Promise((r) => chrome.storage.local.get('optimaSettings', r));
-        const s = (data && data.optimaSettings) || { courses: {} };
-        s.lang = I.normalizeLang(l);
-        await new Promise((r) => chrome.storage.local.set({ optimaSettings: s }, r));
+        await saveSettings({ lang: I.normalizeLang(l) });
         render();
       },
       onPref: async (courseId, pref) => {
@@ -39,10 +51,8 @@
         render();
       },
       onReset: async () => {
-        const data = await new Promise((r) => chrome.storage.local.get('optimaSettings', r));
-        const s = (data && data.optimaSettings) || {};
         await new Promise((r) => chrome.storage.local.set(
-          { optimaSettings: { courses: {}, lang: (s && s.lang) || 'en' } }, r));
+          { optimaSettings: { courses: {}, lang: (settings && settings.lang) || 'en' } }, r));
         render();
       },
     }));
