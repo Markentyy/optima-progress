@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2026-10-03
 ### Added
 - Semester/year statistics switcher, current semester auto-detected by class dates.
 ### Fixed
