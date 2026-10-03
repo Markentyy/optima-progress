@@ -115,18 +115,53 @@ function scopedCourse() {
   ok(JSON.stringify(V.scoresFor(bare, { 9: [{ score: 7 }] }, { type: 'semester', n: 5 })) === '[]', 'journal skipped in sem');
 }
 // scope switcher renders in all languages, no undefined
+function twoCourses() {
+  const a = scopedCourse();
+  a.courseId = '1';
+  a.title = 'Both sems';
+  const b = scopedCourse();
+  b.courseId = '2';
+  b.title = 'Sixth only';
+  b.sections = b.sections.filter((s) => s.semester === 6);
+  b.lectures = { done: 1, total: 2 };
+  b.practices = { graded: 1, submitted: 0, todo: 1, total: 2, scores: [{ name: 'P2', score: 10, url: '', semester: 6 }] };
+  return [a, b];
+}
 for (const l of ['en', 'uk', 'ru']) {
   const dom = new JSDOM('<body></body>');
   const node = V.buildStatsView(dom.window.document, {
-    courses: [scopedCourse()], gradesByCourse: {}, settings: { courses: {} },
+    courses: twoCourses(), gradesByCourse: {}, settings: { courses: {} },
     lang: l, scope: { type: 'semester', n: 5 }, semesters: [5, 6],
     onScope: () => {}, onLang: () => {}, onPref: () => {}, onReset: () => {},
   });
   const html = node.outerHTML;
   ok(html.indexOf('undefined') === -1, l + ' no undefined');
   ok(node.querySelectorAll('button.op-scope-btn').length === 3, l + ' three scope buttons');
+  ok(node.querySelectorAll('div.op-course').length === 1, l + ' only sem5 course listed');
+  ok(html.indexOf('Both sems') !== -1 && html.indexOf('Sixth only') === -1, l + ' sem6 course hidden');
   ok(html.indexOf('2/3') !== -1, l + ' sem5 lecture counts in meta');
   ok(html.indexOf('12.00 / 12') !== -1, l + ' sem5 mean of [12]');
+}
+// year scope lists everything
+{
+  const dom = new JSDOM('<body></body>');
+  const node = V.buildStatsView(dom.window.document, {
+    courses: twoCourses(), gradesByCourse: {}, settings: { courses: {} },
+    lang: 'en', scope: { type: 'year' }, semesters: [5, 6],
+    onScope: () => {}, onLang: () => {}, onPref: () => {}, onReset: () => {},
+  });
+  ok(node.querySelectorAll('div.op-course').length === 2, 'year lists all');
+}
+// semester with no courses at all
+{
+  const dom = new JSDOM('<body></body>');
+  const node = V.buildStatsView(dom.window.document, {
+    courses: twoCourses(), gradesByCourse: {}, settings: { courses: {} },
+    lang: 'uk', scope: { type: 'semester', n: 7 }, semesters: [5, 6, 7],
+    onScope: () => {}, onLang: () => {}, onPref: () => {}, onReset: () => {},
+  });
+  ok(node.querySelectorAll('div.op-course').length === 0, 'empty semester lists none');
+  ok(node.outerHTML.indexOf('у цьому семестрі') !== -1, 'empty semester message');
 }
 
 console.log('ALL ' + n + ' ASSERTIONS PASSED');

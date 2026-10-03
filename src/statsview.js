@@ -136,6 +136,10 @@
 
     const scope = opts.scope || { type: 'year' };
     const semesters = opts.semesters || [];
+    // Semester scope lists only that semester's courses; year lists all.
+    const visible = (scope.type === 'semester')
+      ? courses.filter((c) => ((c.sections || []).some((s) => s && s.semester === scope.n)))
+      : courses;
     if (semesters.length) {
       const bar = el(doc, 'div', 'op-scope');
       bar.setAttribute('role', 'group');
@@ -154,9 +158,9 @@
       root.appendChild(bar);
     }
 
-    const view = courses.map((c) => ({ c, d: scopeData(c, scope) }));
+    const view = visible.map((c) => ({ c, d: scopeData(c, scope) }));
     const totals = el(doc, 'section', 'op-totals');
-    totals.innerHTML = courses.length ? totalsHtml(t, view, prefs) : t('noData');
+    totals.innerHTML = visible.length ? totalsHtml(t, view, prefs) : t('noData');
     root.appendChild(totals);
 
     const actions = el(doc, 'div', 'op-actions');
@@ -167,8 +171,8 @@
     root.appendChild(actions);
 
     const list = el(doc, 'div', 'op-list');
-    if (!courses.length) {
-      list.textContent = t('empty', { url: 'https://b.optima-osvita.org/my/' });
+    if (!visible.length) {
+      list.textContent = courses.length ? t('emptyScope') : t('empty', { url: 'https://b.optima-osvita.org/my/' });
     }
     for (const { c, d } of view) {
       const rawPref = (prefs.courses || {})[c.courseId] || { included: true, mode: '12' };
