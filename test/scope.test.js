@@ -17,6 +17,7 @@ const ok = (cond, msg) => { n++; assert.ok(cond, msg); };
 // ---------- semesterFromLabel ----------
 ok(P.semesterFromLabel('Заняття, 5 семестр') === 5, 'sem 5');
 ok(P.semesterFromLabel('Заняття, 6 семестр') === 6, 'sem 6');
+ok(P.semesterFromLabel('Семестр 5') === 5, 'reversed sem');
 ok(P.semesterFromLabel('Анонси') === null, 'no sem');
 ok(P.semesterFromLabel('') === null, 'empty no sem');
 ok(P.semesterFromLabel(null) === null, 'null no sem');
@@ -151,6 +152,34 @@ for (const l of ['en', 'uk', 'ru']) {
     onScope: () => {}, onLang: () => {}, onPref: () => {}, onReset: () => {},
   });
   ok(node.querySelectorAll('div.op-course').length === 2, 'year lists all');
+}
+// spanning course shows correct numbers in BOTH semesters
+function renderScope(courses, scope, semesters) {
+  const dom = new JSDOM('<body></body>');
+  return V.buildStatsView(dom.window.document, {
+    courses, gradesByCourse: {}, settings: { courses: {} },
+    lang: 'en', scope, semesters,
+    onScope: () => {}, onLang: () => {}, onPref: () => {}, onReset: () => {},
+  });
+}
+{
+  const sem6 = renderScope(twoCourses(), { type: 'semester', n: 6 }, [5, 6]);
+  ok(sem6.querySelectorAll('div.op-course').length === 2, 'sem6 lists both spanning courses');
+  ok(sem6.outerHTML.indexOf('1/2') !== -1, 'sem6 lecture counts');
+  ok(sem6.outerHTML.indexOf('10.00 / 12') !== -1, 'sem6 mean of [10]');
+}
+// unlabeled sections: year only, hidden from semester scopes
+{
+  const unlabeled = [{
+    courseId: '3', title: 'No sems',
+    lectures: { done: 1, total: 1 },
+    practices: { graded: 1, submitted: 0, todo: 0, total: 1, scores: [{ name: 'P', score: 8, url: '', semester: null }] },
+    sections: [{ label: 'Анонси', semester: null, lectures: { done: 1, total: 1 }, practices: { graded: 1, submitted: 0, todo: 0, total: 1 } }],
+  }];
+  const sem = renderScope(unlabeled, { type: 'semester', n: 5 }, [5]);
+  ok(sem.querySelectorAll('div.op-course').length === 0, 'unlabeled hidden in sem scope');
+  const year = renderScope(unlabeled, { type: 'year' }, [5]);
+  ok(year.querySelectorAll('div.op-course').length === 1, 'unlabeled visible in year');
 }
 // semester with no courses at all
 {

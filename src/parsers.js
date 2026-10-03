@@ -40,9 +40,15 @@
   }
 
   // Semester number from a section label ("Заняття, 5 семестр" -> 5).
+  // A course spanning both semesters simply has sections in each one and
+  // shows up in both semester scopes. Sections without a number (e.g.
+  // "Анонси") stay visible in year scope only.
   function semesterFromLabel(label) {
-    const m = String(label || '').match(/(\d+)\s*семестр/i);
-    return m ? Number(m[1]) : null;
+    const s = String(label || '');
+    const direct = s.match(/(\d+)\s*семестр/i);
+    if (direct) return Number(direct[1]);
+    const reversed = s.match(/семестр\s*(\d+)/i);
+    return reversed ? Number(reversed[1]) : null;
   }
 
   // Expected date from a cell ("очікуваний: 7 вересня 2026" -> UTC ms).
