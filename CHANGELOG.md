@@ -4,7 +4,9 @@
 ### Added
 - Semester/year statistics switcher, current semester auto-detected by class dates.
 ### Fixed
-- Sections parsed in order inside one scale block: each cell belongs to its own semester.## [0.3.0] - 2026-09-28
+- Sections parsed in order inside one scale block: each cell belongs to its own semester.
+### Fixed
+- Lecture/practice detection by activity type: lesson-type cells named "Практичне" count as lectures.## [0.3.0] - 2026-09-28
 ### Added
 - In-page sidebar panel with the same full stats as the popup.
 - Interface in English, Ukrainian and Russian with an in-UI switcher.

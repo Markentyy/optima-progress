@@ -24,10 +24,19 @@
 
   // NOTE: the patterns below match the site's Ukrainian UI ("Лекція", "Оцінка:"...).
   // They are data matchers, not repo language: do not translate them.
-  function classifyActivity(name) {
-    const n = String(name || '').trim();
-    if (/^лекц/i.test(n)) return 'lecture'; // "Лекція..."
-    if (/практичн|лабораторн|^тест|завдання|практикум|зал[іi]к|проєкт|проект|есе/i.test(n)) return 'practice';
+  // Activity type from the cell class (--lesson, --quiz, --assign, --page...).
+  // This is the primary signal: some courses name lesson-type activities
+  // "Практичне заняття", so the name alone misclassifies them.
+  function activityType(className) {
+    const m = String(className || '').match(/--(lesson|quiz|assign|page|forum|chat|workshop|feedback|choice|survey|lti|scorm|resource|folder|book|url|label)/);
+    return m ? m[1] : 'other';
+  }
+
+  function classifyActivity(name, type) {
+    if (/^лекц/i.test(name)) return 'lecture';
+    if (type === 'lesson') return 'lecture';
+    if (/практичн|лабораторн|^тест|завдання|практикум|зал[іi]к|проєкт|проект|есе/i.test(name)) return 'practice';
+    if (type === 'quiz' || type === 'assign') return 'practice';
     return 'other';
   }
 
@@ -138,7 +147,7 @@
         const parseCell = (cell) => {
           const sec = current || ensureSection('');
           const name = cell.getAttribute('data-name') || '';
-          const kind = classifyActivity(name);
+          const kind = classifyActivity(name, activityType(cell.className));
           const status = cellStatus(cell.className);
           const url = cell.getAttribute('href') || '';
           const ts = parseExpectedDate(cell.getAttribute('data-date'));
@@ -152,7 +161,14 @@
           }
           parsed += 1;
 
-          if (kind === 'lecture') {
+          // A numeric grade always means a graded assignment, whatever the type.
+          if (score !== null) {
+            sec.practices.total += 1;
+            course.practices.total += 1;
+            sec.practices.graded += 1;
+            course.practices.graded += 1;
+            course.practices.scores.push({ name, score, url, semester: sec.semester });
+          } else if (kind === 'lecture') {
             sec.lectures.total += 1;
             course.lectures.total += 1;
             if (status === 'completed') {
@@ -162,11 +178,7 @@
           } else if (kind === 'practice') {
             sec.practices.total += 1;
             course.practices.total += 1;
-            if (score !== null) {
-              sec.practices.graded += 1;
-              course.practices.graded += 1;
-              course.practices.scores.push({ name, score, url, semester: sec.semester });
-            } else if (status === 'submitted') {
+            if (status === 'submitted') {
               sec.practices.submitted += 1;
               course.practices.submitted += 1;
             } else {
@@ -251,6 +263,7 @@
     toNumber,
     courseIdFromUrl,
     classifyActivity,
+    activityType,
     cellStatus,
     semesterFromLabel,
     parseExpectedDate,

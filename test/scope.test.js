@@ -97,6 +97,45 @@ ok(P.detectCurrentSemester([], Date.now()) === null, 'no courses');
   ok(V.resolveScope(P, { scope: { type: 'semester', n: 6 } }, [c], 0).n === 6, 'saved wins');
 }
 
+// ---------- foreign-language course: lesson-type cells named "Практичне" ----------
+// Green checks are lectures whatever they are called; numbers are practices.
+{
+  const check = (name, date) =>
+    `<a class="block_optima_indicators__cell block_optima_indicators__cell--completed block_optima_indicators__cell--lesson" href="https://b.optima-osvita.org/mod/lesson/view.php?id=1" data-region="optima-indicators-cell" data-name="${name}" data-date="${date}" aria-label="${name}. Виконано."><i></i></a>`;
+  const futureLesson = (name, date) =>
+    `<a class="block_optima_indicators__cell block_optima_indicators__cell--future block_optima_indicators__cell--lesson" href="https://b.optima-osvita.org/mod/lesson/view.php?id=1" data-region="optima-indicators-cell" data-name="${name}" data-date="${date}" aria-label="${name}. Ще не виконано."><i></i></a>`;
+  const gradedQuiz = (name, date, score) =>
+    `<a class="block_optima_indicators__cell block_optima_indicators__cell--completed block_optima_indicators__cell--quiz" href="https://b.optima-osvita.org/mod/quiz/view.php?id=1" data-region="optima-indicators-cell" data-name="${name}" data-date="${date}" aria-label="${name}. Виконано. Оцінка: ${score}."><span class="block_optima_indicators__value">${score}</span></a>`;
+  const futureQuiz = (name, date) =>
+    `<a class="block_optima_indicators__cell block_optima_indicators__cell--future block_optima_indicators__cell--quiz" href="https://b.optima-osvita.org/mod/quiz/view.php?id=1" data-region="optima-indicators-cell" data-name="${name}" data-date="${date}" aria-label="${name}. Ще не виконано."><span class="block_optima_indicators__value">--</span></a>`;
+  let sem5cells = '';
+  for (let i = 1; i <= 5; i++) sem5cells += check('Практичне заняття ' + i + '. Digital Era', 'очікуваний: 7 вересня 2026');
+  sem5cells += gradedQuiz('Тест 1. Ethics', 'очікуваний: 5 жовтня 2026', 20);
+  for (let i = 6; i <= 12; i++) sem5cells += futureLesson('Практичне заняття ' + i + '. Topic', 'очікуваний: 12 жовтня 2026');
+  for (let i = 2; i <= 4; i++) sem5cells += futureQuiz('Тест ' + i + '. Topic', 'очікуваний: 19 жовтня 2026');
+  let sem6cells = '';
+  for (let i = 13; i <= 15; i++) sem6cells += futureLesson('Практичне заняття ' + i + '. Topic', 'очікуваний: 11 січня 2027');
+  const dom = new JSDOM(`<body>
+    <div class="block_optima_indicators__course-card">
+      <div class="block_optima_indicators__course-header"><a href="https://b.optima-osvita.org/course/view.php?id=826">English</a></div>
+      <div class="block_optima_indicators__scale">
+        <h6 class="block_optima_indicators__section">Заняття, 5 семестр</h6>
+        <div class="block_optima_indicators__cells">${sem5cells}</div>
+        <h6 class="block_optima_indicators__section">Заняття, 6 семестр</h6>
+        <div class="block_optima_indicators__cells">${sem6cells}</div>
+      </div>
+    </div></body>`);
+  const [c] = P.parseMyPage(dom.window.document);
+  ok(c.lectures.done === 5 && c.lectures.total === 15, 'checks are lectures, got ' + c.lectures.done + '/' + c.lectures.total);
+  ok(c.practices.graded === 1 && c.practices.todo === 3 && c.practices.total === 4, 'one graded, three todo');
+  ok(JSON.stringify(c.practices.scores.map((s) => s.score)) === '[20]', 'only the number counts');
+  const d5 = V.scopeData(c, { type: 'semester', n: 5 });
+  ok(d5.lectures.done === 5 && d5.lectures.total === 12, 'sem5 lectures');
+  ok(JSON.stringify(d5.scores) === '[20]', 'sem5 scores');
+  const d6 = V.scopeData(c, { type: 'semester', n: 6 });
+  ok(d6.lectures.done === 0 && d6.lectures.total === 3, 'sem6 lectures');
+  ok(JSON.stringify(d6.scores) === '[]', 'sem6 no scores');
+}
 // ---------- view filtering per scope ----------
 function scopedCourse() {
   return {
