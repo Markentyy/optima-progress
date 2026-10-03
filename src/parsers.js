@@ -120,54 +120,78 @@
       }
       const course = byId[courseId];
 
+      // One scale block may hold several semester sections in a row
+      // (h6 + cells, h6 + cells). Walk children in order so every cell
+      // lands in its own section instead of the first h6 of the block.
       card.querySelectorAll('.block_optima_indicators__scale').forEach((scale) => {
-        const labelEl = scale.querySelector('.block_optima_indicators__section');
-        const label = labelEl ? labelEl.textContent.trim() : '';
-        const semester = semesterFromLabel(label);
-        const lectures = { done: 0, total: 0 };
-        const practices = { graded: 0, submitted: 0, todo: 0, total: 0 };
-        let minTs = null;
-        let maxTs = null;
-
-        scale.querySelectorAll('a[data-region="optima-indicators-cell"]').forEach((cell) => {
+        let current = null;
+        let parsed = 0;
+        const ensureSection = (label) => {
+          current = {
+            label, semester: semesterFromLabel(label), minTs: null, maxTs: null,
+            lectures: { done: 0, total: 0 },
+            practices: { graded: 0, submitted: 0, todo: 0, total: 0 },
+          };
+          course.sections.push(current);
+          return current;
+        };
+        const parseCell = (cell) => {
+          const sec = current || ensureSection('');
           const name = cell.getAttribute('data-name') || '';
           const kind = classifyActivity(name);
           const status = cellStatus(cell.className);
           const url = cell.getAttribute('href') || '';
           const ts = parseExpectedDate(cell.getAttribute('data-date'));
-          if (ts !== null && (minTs === null || ts < minTs)) minTs = ts;
-          if (ts !== null && (maxTs === null || ts > maxTs)) maxTs = ts;
+          if (ts !== null && (sec.minTs === null || ts < sec.minTs)) sec.minTs = ts;
+          if (ts !== null && (sec.maxTs === null || ts > sec.maxTs)) sec.maxTs = ts;
           const valueEl = cell.querySelector('.block_optima_indicators__value');
           let score = valueEl ? toNumber(valueEl.textContent) : null;
           if (score === null) {
             const m = String(cell.getAttribute('aria-label') || '').match(/Оцінка:\s*([\d.,]+)/);
             if (m) score = toNumber(m[1]);
           }
+          parsed += 1;
 
           if (kind === 'lecture') {
-            lectures.total += 1;
+            sec.lectures.total += 1;
             course.lectures.total += 1;
             if (status === 'completed') {
-              lectures.done += 1;
+              sec.lectures.done += 1;
               course.lectures.done += 1;
             }
           } else if (kind === 'practice') {
-            practices.total += 1;
+            sec.practices.total += 1;
             course.practices.total += 1;
             if (score !== null) {
-              practices.graded += 1;
+              sec.practices.graded += 1;
               course.practices.graded += 1;
-              course.practices.scores.push({ name, score, url, semester });
+              course.practices.scores.push({ name, score, url, semester: sec.semester });
             } else if (status === 'submitted') {
-              practices.submitted += 1;
+              sec.practices.submitted += 1;
               course.practices.submitted += 1;
             } else {
-              practices.todo += 1;
+              sec.practices.todo += 1;
               course.practices.todo += 1;
             }
           }
+        };
+        Array.from(scale.children).forEach((child) => {
+          if (!child.matches) return;
+          if (child.matches('h6.block_optima_indicators__section')) {
+            ensureSection((child.textContent || '').trim());
+          } else if (child.matches('.block_optima_indicators__cells')) {
+            child.querySelectorAll('a[data-region="optima-indicators-cell"]').forEach(parseCell);
+          } else if (child.matches('a[data-region="optima-indicators-cell"]')) {
+            parseCell(child);
+          }
+          // info blocks and anything else are ignored
         });
-        course.sections.push({ label, semester, minTs, maxTs, lectures, practices });
+        // Safety net for exotic nesting: no recognizable structure, but cells exist.
+        if (parsed === 0 && scale.querySelector('a[data-region="optima-indicators-cell"]')) {
+          const labelEl = scale.querySelector('.block_optima_indicators__section');
+          ensureSection(labelEl ? labelEl.textContent.trim() : '');
+          scale.querySelectorAll('a[data-region="optima-indicators-cell"]').forEach(parseCell);
+        }
       });
     });
     return order.map((id) => byId[id]);

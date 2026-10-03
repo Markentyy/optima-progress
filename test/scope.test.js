@@ -56,6 +56,7 @@ ok(P.detectCurrentSemester([{ courseId: '1', sections: [{ semester: null }] }], 
 ok(P.detectCurrentSemester([], Date.now()) === null, 'no courses');
 
 // ---------- parseMyPage carries semester + dates ----------
+// REAL page shape: ONE scale block holds several h6+cells sections in a row.
 {
   const cell = (cls, name, date, inner) =>
     `<a class="block_optima_indicators__cell ${cls}" href="https://b.optima-osvita.org/mod/quiz/view.php?id=1" data-region="optima-indicators-cell" data-name="${name}" data-date="${date}" aria-label="${name}">${inner}</a>`;
@@ -65,24 +66,35 @@ ok(P.detectCurrentSemester([], Date.now()) === null, 'no courses');
       <div class="block_optima_indicators__scale">
         <h6 class="block_optima_indicators__section">Заняття, 5 семестр</h6>
         <div class="block_optima_indicators__cells">
+          ${cell('block_optima_indicators__cell--completed block_optima_indicators__cell--lesson', 'Лекція 1', 'очікуваний: 2 вересня 2026', '<i></i>')}
           ${cell('block_optima_indicators__cell--completed block_optima_indicators__cell--quiz', 'Практичне заняття 1', 'очікуваний: 7 вересня 2026', '<span class="block_optima_indicators__value">12</span>')}
         </div>
-      </div>
-      <div class="block_optima_indicators__scale">
         <h6 class="block_optima_indicators__section">Заняття, 6 семестр</h6>
         <div class="block_optima_indicators__cells">
+          ${cell('block_optima_indicators__cell--future block_optima_indicators__cell--lesson', 'Лекція 11', 'очікуваний: 12 січня 2027', '<i></i>')}
           ${cell('block_optima_indicators__cell--completed block_optima_indicators__cell--quiz', 'Практичне заняття 19', 'очікуваний: 19 січня 2027', '<span class="block_optima_indicators__value">10</span>')}
         </div>
+        <div class="block_optima_indicators__info"><span>hover info, ignored</span></div>
       </div>
     </div></body>`);
   const [c] = P.parseMyPage(dom.window.document);
+  ok(c.sections.length === 2, 'two sections from one scale, got ' + c.sections.length);
   ok(c.sections[0].semester === 5 && c.sections[1].semester === 6, 'section semesters');
-  ok(c.sections[0].minTs === Date.UTC(2026, 8, 7), 'section dates');
+  ok(c.sections[0].lectures.done === 1 && c.sections[0].lectures.total === 1, 'sem5 lecture split');
+  ok(c.sections[1].lectures.done === 0 && c.sections[1].lectures.total === 1, 'sem6 lecture split');
+  ok(JSON.stringify(c.practices.scores.map((s) => s.score)) === '[12,10]', 'scores kept');
   ok(c.practices.scores[0].semester === 5 && c.practices.scores[1].semester === 6, 'score semesters');
+  ok(c.sections[0].minTs === Date.UTC(2026, 8, 2), 'sem5 dates');
+  ok(c.sections[1].maxTs === Date.UTC(2027, 0, 19), 'sem6 dates');
+  const d5 = V.scopeData(c, { type: 'semester', n: 5 });
+  ok(d5.lectures.done === 1 && d5.lectures.total === 1, 'sem5 view counts');
+  ok(JSON.stringify(d5.scores) === '[12]', 'sem5 view scores');
+  const d6 = V.scopeData(c, { type: 'semester', n: 6 });
+  ok(d6.lectures.done === 0 && d6.lectures.total === 1, 'sem6 view counts');
+  ok(JSON.stringify(d6.scores) === '[10]', 'sem6 view scores');
   ok(JSON.stringify(V.allSemesters([c])) === '[5,6]', 'allSemesters');
   ok(JSON.stringify(V.resolveScope(P, {}, [c], Date.UTC(2026, 9, 15))) === JSON.stringify({ type: 'semester', n: 5 }), 'auto sem5');
   ok(V.resolveScope(P, { scope: { type: 'semester', n: 6 } }, [c], 0).n === 6, 'saved wins');
-  ok(V.resolveScope(P, { scope: { type: 'semester', n: 99 } }, [c], 0).type === 'year' || true, 'bad saved ignored');
 }
 
 // ---------- view filtering per scope ----------
