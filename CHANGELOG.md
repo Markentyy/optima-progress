@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- Dark interface theme, switchable in the popup and panel and saved in settings.
+
 ## [0.4.0] - 2026-10-03
 ### Added
 - Semester/year statistics switcher, current semester auto-detected by class dates.

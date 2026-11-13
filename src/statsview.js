@@ -130,7 +130,22 @@
     langSel.value = lang;
     langSel.addEventListener('change', () => opts.onLang(langSel.value));
     head.appendChild(langSel);
+
+    const themeSel = doc.createElement('select');
+    themeSel.className = 'op-theme';
+    themeSel.setAttribute('aria-label', t('ariaTheme'));
+    [['light', t('themeLight')], ['dark', t('themeDark')]].forEach(([v, label]) => {
+      const o = doc.createElement('option');
+      o.value = v;
+      o.textContent = label;
+      themeSel.appendChild(o);
+    });
+    themeSel.value = opts.theme || 'light';
+    themeSel.addEventListener('change', () => opts.onTheme(themeSel.value));
+    head.appendChild(themeSel);
     root.appendChild(head);
+
+    root.setAttribute('data-op-theme', opts.theme || 'light');
 
     root.appendChild(el(doc, 'p', 'op-hint', t('hint')));
 

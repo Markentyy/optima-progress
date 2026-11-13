@@ -35,9 +35,14 @@
       courses,
       gradesByCourse,
       settings,
+      theme: settings.theme || 'light',
       lang,
       scope,
       semesters: V.allSemesters(courses),
+      onTheme: async (th) => {
+        await saveSettings({ theme: th });
+        render();
+      },
       onScope: async (sc) => {
         await saveSettings({ scope: sc });
         render();
@@ -52,7 +57,7 @@
       },
       onReset: async () => {
         await new Promise((r) => chrome.storage.local.set(
-          { optimaSettings: { courses: {}, lang: (settings && settings.lang) || 'en' } }, r));
+          { optimaSettings: { courses: {}, lang: (settings && settings.lang) || 'en', theme: 'light' } }, r));
         render();
       },
     }));
