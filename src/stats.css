@@ -152,7 +152,7 @@
 .op-compact .op-avg { font-size: 12px; }
 
 /* Dark interface theme. Applied through data-op-theme="dark" on .op-root. */
-[data-op-theme="dark"] .op-root {
+[data-op-theme="dark"].op-root {
   --op-bg: #1e251f;
   --op-card: #262e28;
   --op-text: #e6efe9;
