@@ -1,6 +1,6 @@
 {
   "name": "optima-progress",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Local-only browser extension: lecture/practice counters and grades for a Moodle-based platform.",
   "scripts": {

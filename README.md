@@ -1,6 +1,6 @@
 # Optima Progress (local)
 
-![version](https://img.shields.io/badge/version-0.4.0-blue)
+![version](https://img.shields.io/badge/version-0.5.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![privacy](https://img.shields.io/badge/data-local%20only-brightgreen)
 ![platform](https://img.shields.io/badge/platform-Chrome%20MV3-orange)
