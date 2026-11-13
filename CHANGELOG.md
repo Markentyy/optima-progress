@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.0] - 2026-11-14
 ### Added
 - Dark interface theme, switchable in the popup and panel and saved in settings.
 
